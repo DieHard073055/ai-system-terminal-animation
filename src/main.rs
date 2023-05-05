@@ -44,12 +44,12 @@ fn sleep(milliseconds: u64) {
     thread::sleep(Duration::from_millis(milliseconds));
 }
 
-fn print_message(stdout: &mut impl Write, message: &str) {
-    let spinner_duration = Duration::from_millis(50);
+fn print_message(stdout: &mut impl Write, message: &str, speed: u64) {
+    let cursor_duration = Duration::from_millis(speed);
     let letters = message.to_string().chars().collect::<Vec<char>>();
     for letter in letters {
         // Sleep for the specified duration
-        thread::sleep(spinner_duration);
+        thread::sleep(cursor_duration);
         print!("{letter}");
         stdout.flush().unwrap();
     }
@@ -74,21 +74,36 @@ fn execute_script_line(line: &str, stdout: &mut impl Write) {
             }
         }
         "print_message" => {
-            if command_parts.len() >= 2 {
-                let message = command_parts[1..].join(" ");
-                print_message(stdout, &message);
-            }
+            let (speed, message_parts) =
+                if command_parts.len() >= 3 && command_parts[1].starts_with(';') {
+                    (
+                        command_parts[1][1..].parse().unwrap_or(50),
+                        &command_parts[2..],
+                    )
+                } else {
+                    (50, &command_parts[1..])
+                };
+            let message = message_parts.join(" ");
+            print_message(stdout, &message, speed);
         }
         "loading_screen" => {
             loading_screen(stdout);
         }
         "defragmentation_animation" => {
-            if command_parts.len() >= 4 {
-                if let Ok(steps) = command_parts[2].parse() {
-                    let current_memory_file = command_parts[1];
-                    let output_memory_file = command_parts[3];
-                    thread::sleep(Duration::from_millis(5000));
-                    defragmentation_animation(&current_memory_file, steps, output_memory_file);
+            if command_parts.len() >= 5 {
+                match (command_parts[2].parse(), command_parts[3].parse()) {
+                    (Ok(steps), Ok(speed)) => {
+                        let current_memory_file = command_parts[1];
+                        let output_memory_file = command_parts[3];
+                        thread::sleep(Duration::from_millis(5000));
+                        defragmentation_animation(
+                            &current_memory_file,
+                            steps,
+                            speed,
+                            output_memory_file,
+                        );
+                    }
+                    _ => {}
                 }
             }
         }
@@ -102,7 +117,7 @@ fn execute_script_line(line: &str, stdout: &mut impl Write) {
                 .expect(format!("Failed to read {:}", filename).as_str());
             execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
             for line in file_string.split('\n') {
-                print_message(stdout, &line);
+                print_message(stdout, &line, 50);
                 execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
             }
         }

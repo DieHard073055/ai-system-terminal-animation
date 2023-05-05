@@ -12,7 +12,12 @@ use std::time::Duration;
 
 const SWAP_ITERATIONS: usize = 10;
 
-pub fn defragmentation_animation(memory_file_1: &str, steps: usize, memory_file_2: &str) {
+pub fn defragmentation_animation(
+    memory_file_1: &str,
+    steps: usize,
+    speed: u64,
+    memory_file_2: &str,
+) {
     let mut visited_node = HashMap::new();
     let mut unvisited_nodes: VecDeque<(usize, usize)> = vec![(1, 1)].into();
     let maze_string = fs::read_to_string(memory_file_1).expect("Failed to read maze.txt");
@@ -45,12 +50,28 @@ pub fn defragmentation_animation(memory_file_1: &str, steps: usize, memory_file_
                     .chars()
                     .nth(rand::random::<usize>() % random_chars.chars().count())
                     .unwrap();
-                draw_maze(&maze, &mut visited_node, &row, &col, &mut stdout);
+                draw_maze(
+                    &maze,
+                    &mut visited_node,
+                    &row,
+                    &col,
+                    &mut stdout,
+                    steps,
+                    speed,
+                );
             }
 
             // Change the character to whitespace
             maze[row][col] = ' ';
-            draw_maze(&maze, &mut visited_node, &row, &col, &mut stdout);
+            draw_maze(
+                &maze,
+                &mut visited_node,
+                &row,
+                &col,
+                &mut stdout,
+                steps,
+                speed,
+            );
             spaces_cleared += 1;
         }
 
@@ -102,19 +123,28 @@ fn draw_maze(
     row: &usize,
     col: &usize,
     stdout: &mut impl Write,
+    steps: usize,
+    speed: u64,
 ) {
     stdout.queue(MoveTo(0, 0)).unwrap();
-    println!("Defragmentation progress: {:}%", visited_node.len());
+    let progress = visited_node.len();
+    println!("Defragmentation progress: {:}%", progress);
+    stdout.flush().unwrap();
     execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
-    println!("Memory sectors fixed: {:}", visited_node.len() * 8);
+    println!("Memory sectors fixed: {:}", progress * 8);
+    stdout.flush().unwrap();
     execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
     println!("Memory sectors remaining: 2#&!");
+    stdout.flush().unwrap();
     execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
     println!("Current memory sector: ({:}, {:})", row, col);
+    stdout.flush().unwrap();
     execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
     println!("Time elapsed: 0*:#!$");
+    stdout.flush().unwrap();
     execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
     println!("Estimated time remaining: 0@:%$!");
+    stdout.flush().unwrap();
     execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
     for row in maze {
         for ch in row {
@@ -127,6 +157,6 @@ fn draw_maze(
     stdout.flush().unwrap();
     visited_node.entry((*row, *col)).and_modify(|e| *e += 1);
     if visited_node.get(&(*row, *col)).unwrap() < &10 {
-        thread::sleep(Duration::from_millis(100));
+        thread::sleep(Duration::from_millis(speed));
     }
 }
