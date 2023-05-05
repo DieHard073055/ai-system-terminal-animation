@@ -1,4 +1,4 @@
-use crossterm::cursor::{Hide, MoveTo, Show};
+use crossterm::cursor::MoveTo;
 use crossterm::terminal::{self, Clear};
 use crossterm::QueueableCommand;
 use crossterm::{
@@ -8,15 +8,14 @@ use crossterm::{
     ExecutableCommand,
 };
 use first::memory_defrag_animation::defragmentation_animation;
+use std::env;
 use std::fs;
 use std::{
     fs::File,
-    io::{prelude::*, stdout, BufReader, Stdout, Write},
+    io::{prelude::*, stdout, BufReader, Write},
     thread,
     time::Duration,
 };
-const MEMORY_FILE_1: &str = "new_maze.txt";
-const MEMORY_FILE_2: &str = "new_maze_2.txt";
 
 fn loading_screen(stdout: &mut impl Write) {
     let spinner_characters = vec!['|', '/', '-', '\\'];
@@ -117,7 +116,14 @@ fn main() {
     // Enable raw mode to have direct control over the terminal
     enable_raw_mode().unwrap();
 
-    let script_file = File::open("script.txt").expect("Unable to open script file");
+    let args: Vec<String> = env::args().collect();
+    let script_filename = if args.len() > 1 {
+        &args[1]
+    } else {
+        panic!("Please provide a script file as an argument.");
+    };
+
+    let script_file = File::open(script_filename).expect("Unable to open script file");
     let reader = BufReader::new(script_file);
 
     for line in reader.lines() {
