@@ -103,7 +103,7 @@ fn execute_script_line(line: &str, stdout: &mut impl Write) {
                 .expect(format!("Failed to read {:}", filename).as_str());
             execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
             for line in file_string.split('\n') {
-                println!("{}", line);
+                print_message(stdout, &line);
                 execute!(stdout, crossterm::cursor::MoveLeft(100)).unwrap();
             }
         }
