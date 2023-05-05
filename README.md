@@ -18,7 +18,8 @@ AI System Terminal Animation is a Rust-based terminal animation simulating an AI
 ## Usage
 
 1. Compile the project: `cargo build --release`
-2. Run the compiled binary: `./target/release/ai_system_terminal_animation`
+2. create a `script.txt` with one of the supported commands (eg: `echo "print_message hello world" > script.txt` )
+2. Run the compiled binary: `./target/release/ai_system_terminal_animation script.txt`
 
 ## Customization
 
